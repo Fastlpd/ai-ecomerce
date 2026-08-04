@@ -1,0 +1,21 @@
+{
+  "name": "pinterest-renderer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local Pinterest image-rendering service for AI Ecommerce OS",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test-render": "node test-render.js",
+    "test": "node --test test/**/*.test.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "ffmpeg-static": "^2.0.0",
+    "ffprobe-static": "^3.1.0",
+    "fluent-ffmpeg": "^2.0.0",
+    "puppeteer": "^24.15.0"
+  }
+}
