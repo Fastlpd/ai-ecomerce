@@ -1,9 +1,10 @@
 services:
   - type: web
-    name: ai-ecomerce
-    env: node
+    name: ai-ecomerce-service
+    runtime: node
+    region: oregon
     plan: free
-    buildCommand: npm install && npx puppeteer browsers install chrome
+    buildCommand: npm install && npx @puppeteer/browsers install chrome
     startCommand: node server.js
     envVars:
       - key: PORT
