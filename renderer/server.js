@@ -22,7 +22,7 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 const app = express();
-const port = Number.parseInt(process.env.RENDERER_PORT || '3000', 10);
+const port = Number.parseInt(process.env.RENDERER_PORT || process.env.PORT || '3000', 10);
 const expectedApiKey = process.env.RENDERER_API_KEY || '';
 const rendersDirectory = path.join(__dirname, 'renders');
 const videosDirectory = path.join(rendersDirectory, 'videos');
@@ -30,6 +30,7 @@ const renderTimeoutMs = Number.parseInt(process.env.RENDERER_TIMEOUT_MS || '1200
 
 app.use(express.json({ limit: '1mb' }));
 app.use('/renders', express.static(path.join(__dirname, 'renders')));
+
 function safeFilenamePart(value) {
   const sanitized = String(value || 'pin')
     .normalize('NFKD')
@@ -71,6 +72,28 @@ function buildPublicBaseUrl(request) {
   return `${protocol}://${host}`.replace(/\/$/, '');
 }
 
+async function getPuppeteerBrowser() {
+  const launchOptions = {
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--disable-gpu',
+      '--no-first-run',
+      '--no-zygote',
+      '--single-process'
+    ]
+  };
+
+  if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+    launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+  }
+
+  return await puppeteer.launch(launchOptions);
+}
+
 app.get('/health', (_request, response) => {
   response.json({ status: 'ok', service: 'renderer' });
 });
@@ -98,10 +121,7 @@ app.post('/render', async (request, response, next) => {
     const html = renderPinterestTemplate(data);
 
     console.log(`Rendering pin for headline: "${safeFilenamePart(data.headline)}"`);
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
-    });
+    browser = await getPuppeteerBrowser();
     page = await browser.newPage();
     await page.setViewport({ width: 1000, height: 1500, deviceScaleFactor: 1 });
     await page.setDefaultNavigationTimeout(renderTimeoutMs);
@@ -118,6 +138,7 @@ app.post('/render', async (request, response, next) => {
         image.addEventListener('error', () => { clearTimeout(timer); resolve(false); }, { once: true });
       });
     }, renderTimeoutMs);
+
     if (!imageLoaded) {
       return response.status(422).json({ error: 'The product image could not be loaded.' });
     }
@@ -198,11 +219,13 @@ app.post('/render-video', async (request, response) => {
 app.use((error, _request, response, _next) => {
   if (response.headersSent) return;
   const status = error.type === 'entity.too.large' ? 413 : 500;
-  const message = status === 413 ? 'Request body is too large.' : 'Unable to render the Pinterest image.';
-  response.status(status).json({ error: message });
+  response.status(status).json({ 
+    error: error.message || 'Unable to render the Pinterest image.',
+    stack: error.stack 
+  });
 });
 
 app.listen(port, () => {
-  console.log(`Pinterest renderer listening on http://localhost:${port}`);
+  console.log(`Pinterest renderer listening on port ${port}`);
   if (!expectedApiKey) console.warn('RENDERER_API_KEY is not configured; /render requests will be rejected.');
 });
