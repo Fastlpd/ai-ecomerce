@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: ai-ecomerce
+    env: node
+    plan: free
+    buildCommand: npm install && npx puppeteer browsers install chrome
+    startCommand: node server.js
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: RENDERER_API_KEY
+        generateValue: true
