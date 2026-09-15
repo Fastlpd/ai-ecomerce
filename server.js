@@ -98,6 +98,10 @@ app.get('/health', (_request, response) => {
   response.json({ status: 'ok', service: 'renderer' });
 });
 
+app.get('/', (_request, response) => {
+  response.json({ status: 'ok', service: 'renderer' });
+});
+
 app.post('/render', async (request, response, next) => {
   if (!hasValidApiKey(request)) {
     console.warn('Rejected render request with invalid or missing API key');
