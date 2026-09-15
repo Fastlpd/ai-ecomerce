@@ -730,10 +730,17 @@ async function renderVideoToMp4(payload, outputPath, options = {}) {
   const validated = validateVideoRenderPayload(payload);
   logRenderEvent('payload validated', validated);
   logRenderEvent('starting Puppeteer');
-  const browser = await puppeteer.launch({
+  const launchOptions = {
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--single-process', '--no-zygote']
-  });
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu'
+    ]
+  };
+  const browser = await puppeteer.launch(launchOptions);
   let page;
   let tempDirectory;
   let ffmpegProcess;
