@@ -75,16 +75,7 @@ function buildPublicBaseUrl(request) {
 async function getPuppeteerBrowser() {
   const launchOptions = {
     headless: true,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-accelerated-2d-canvas',
-      '--disable-gpu',
-      '--no-first-run',
-      '--no-zygote',
-      '--single-process'
-    ]
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--single-process', '--no-zygote']
   };
 
   if (process.env.PUPPETEER_EXECUTABLE_PATH) {
